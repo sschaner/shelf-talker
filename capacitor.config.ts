@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'icom.shelftalker.app',
+  appId: 'com.shelftalker.app',
   appName: 'Shelf Talker',
   webDir: 'www'
 };
