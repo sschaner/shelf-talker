@@ -1,0 +1,7 @@
+{
+  "name": "shelf-talker",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
