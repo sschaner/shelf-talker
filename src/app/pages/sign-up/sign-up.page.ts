@@ -36,6 +36,10 @@ export class SignUpPage {
   public readonly emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   constructor(private router: Router) {}
+
+  clearError() {
+      this.error = '';
+    }
   
   togglePassword() {
     this.showPassword = !this.showPassword;

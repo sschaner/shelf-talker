@@ -9,7 +9,7 @@ import {
   IonInput,
   IonButton
 } from '@ionic/angular/standalone';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-home',
@@ -37,7 +37,11 @@ export class HomePage {
 
   public readonly emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  constructor() {}
+  constructor(private router: Router) {}
+
+  clearError() {
+      this.error = '';
+    }
 
   togglePassword() {
     this.showPassword = !this.showPassword;
@@ -70,6 +74,7 @@ export class HomePage {
     setTimeout(() => {
       this.loading = false;
       // later: call AuthService.loginEmail(...) and navigate
+      this.router.navigateByUrl('/dashboard', { replaceUrl: true });
     }, 300);
   }
 

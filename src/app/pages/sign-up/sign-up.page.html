@@ -33,13 +33,15 @@
                 label-placement="floating"
                 name="firstName"
                 [(ngModel)]="firstName"
+                (ionInput)="clearError()"
                 #firstNameModel="ngModel"
                 required
+                minlength="1"
                 maxlength="50">
               </ion-input>
             </ion-item>
 
-            @if (firstNameModel.touched && !firstName) {
+            @if (firstNameModel.touched && firstNameModel.invalid) {
             <p class="error-message">
               First name is required.
             </p>
@@ -56,13 +58,15 @@
                 label-placement="floating"
                 name="lastName"
                 [(ngModel)]="lastName"
+                (ionInput)="clearError()"
                 #lastNameModel="ngModel"
                 required
+                minlength="1"
                 maxlength="50">
               </ion-input>
             </ion-item>
 
-            @if (lastNameModel.touched && !lastName) {
+            @if (lastNameModel.touched && lastNameModel.invalid) {
             <p class="error-message">
               Last name is required.
             </p>
@@ -80,6 +84,7 @@
                 type="email"
                 name="email"
                 [(ngModel)]="email"
+                (ionInput)="clearError()"
                 #emailModel="ngModel"
                 required>
               </ion-input>
@@ -103,6 +108,7 @@
                 [type]="showPassword ? 'text' : 'password'"
                 name="password"
                 [(ngModel)]="password"
+                (ionInput)="clearError()"
                 #passwordModel="ngModel"
                 required
                 minlength="8">
@@ -135,6 +141,7 @@
                 [type]="showConfirmPassword ? 'text' : 'password'"
                 name="confirm"
                 [(ngModel)]="confirm"
+                (ionInput)="clearError()"
                 #confirmModel="ngModel"
                 required>
               </ion-input>
