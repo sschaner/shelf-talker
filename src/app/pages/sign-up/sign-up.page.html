@@ -1,0 +1,195 @@
+<ion-content class="home-background">
+  <ion-grid>
+    <ion-row>
+      <ion-col size-sm="6" offset-sm="3">
+        <h3 class="app-title">Shelf Talker</h3>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <div class="login-signup-card signup-card">
+    <form #f="ngForm" (ngSubmit)="submit()">
+      <ion-grid>
+        <ion-row>
+          <ion-col size-sm="6" offset-sm="3">
+            <h5 class="title">Create Your Account</h5>
+          </ion-col>
+        </ion-row>
+
+        <ion-row>
+          <ion-col size-sm="6" offset-sm="3">
+            <div class="subtitle">SIGN UP</div>
+          </ion-col>
+        </ion-row>
+
+        <hr class="divider full-divider" />
+
+        <!-- First Name -->
+        <ion-row>
+          <ion-col size-sm="6" offset-sm="3">
+            <ion-item class="item-input-wrapper" lines="none">
+              <ion-input
+                label="First name"
+                label-placement="floating"
+                name="firstName"
+                [(ngModel)]="firstName"
+                #firstNameModel="ngModel"
+                required
+                maxlength="50">
+              </ion-input>
+            </ion-item>
+
+            @if (firstNameModel.touched && !firstName) {
+            <p class="error-message">
+              First name is required.
+            </p>
+            }
+          </ion-col>
+        </ion-row>
+
+        <!-- Last Name -->
+        <ion-row>
+          <ion-col size-sm="6" offset-sm="3">
+            <ion-item class="item-input-wrapper" lines="none">
+              <ion-input
+                label="Last name"
+                label-placement="floating"
+                name="lastName"
+                [(ngModel)]="lastName"
+                #lastNameModel="ngModel"
+                required
+                maxlength="50">
+              </ion-input>
+            </ion-item>
+
+            @if (lastNameModel.touched && !lastName) {
+            <p class="error-message">
+              Last name is required.
+            </p>
+            }
+          </ion-col>
+        </ion-row>
+
+        <!-- Email -->
+        <ion-row>
+          <ion-col size-sm="6" offset-sm="3">
+            <ion-item class="item-input-wrapper" lines="none">
+              <ion-input
+                label="Email"
+                label-placement="floating"
+                type="email"
+                name="email"
+                [(ngModel)]="email"
+                #emailModel="ngModel"
+                required>
+              </ion-input>
+            </ion-item>
+
+            @if (emailModel.touched && (!email || !emailPattern.test((email || '').trim().toLowerCase()))) {
+            <p class="error-message">
+              Please enter a valid email address.
+            </p>
+            }
+          </ion-col>
+        </ion-row>
+
+        <!-- Password -->
+        <ion-row>
+          <ion-col size-sm="6" offset-sm="3">
+            <ion-item class="item-input-wrapper" lines="none">
+              <ion-input
+                label="Password"
+                label-placement="floating"
+                [type]="showPassword ? 'text' : 'password'"
+                name="password"
+                [(ngModel)]="password"
+                #passwordModel="ngModel"
+                required
+                minlength="8">
+              </ion-input>
+              <i
+                slot="end"
+                class="fa-solid password-icon"
+                [class.fa-eye]="showPassword"
+                [class.fa-eye-slash]="!showPassword"
+                (click)="togglePassword()"
+                aria-hidden="true">
+              </i>
+            </ion-item>
+
+            @if (passwordModel.touched && passwordModel.invalid) {
+            <p class="error-message">
+              Password is required and must be at least 8 characters.
+            </p>
+            }
+          </ion-col>
+        </ion-row>
+
+        <!-- Confirm Password -->
+        <ion-row>
+          <ion-col size-sm="6" offset-sm="3">
+            <ion-item class="item-input-wrapper" lines="none">
+              <ion-input
+                label="Confirm Password"
+                label-placement="floating"
+                [type]="showConfirmPassword ? 'text' : 'password'"
+                name="confirm"
+                [(ngModel)]="confirm"
+                #confirmModel="ngModel"
+                required>
+              </ion-input>
+              <i
+                slot="end"
+                class="fa-solid password-icon"
+                [class.fa-eye]="showConfirmPassword"
+                [class.fa-eye-slash]="!showConfirmPassword"
+                (click)="toggleConfirmPassword()"
+                aria-hidden="true">
+              </i>
+            </ion-item>
+
+            @if (confirmModel.touched && !confirm) {
+            <p class="error-message">
+              Please confirm your password.
+            </p>
+            }
+            @if (confirmModel.touched && passwordMismatch) {
+            <p class="error-message">
+              Passwords do not match.
+            </p>
+            }
+          </ion-col>
+        </ion-row>
+
+        <ion-row>
+          <ion-col size-sm="6" offset-sm="3">
+            <ion-button
+              type="submit"
+              expand="block"
+              color="primary"
+              [disabled]="loading || f.invalid || passwordMismatch">
+              {{ loading ? 'Please wait…' : 'Sign Up' }}
+            </ion-button>
+
+            @if (error) {
+            <p class="error-message">
+              {{ error }}
+            </p>
+            }
+          </ion-col>
+        </ion-row>
+
+        <ion-row class="back-button-row">
+          <ion-col size-sm="6" offset-sm="3" class="ion-text-center">
+            <ion-button
+              fill="clear"
+              (click)="backToLogin()"
+              class="back-button">
+              Back to Login
+            </ion-button>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </form>
+  </div>
+</ion-content>
