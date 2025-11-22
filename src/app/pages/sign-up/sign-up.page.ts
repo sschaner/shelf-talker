@@ -1,10 +1,16 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
-  IonContent, IonGrid, IonRow, IonCol,
-  IonItem, IonInput, IonButton
+  IonContent,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonItem,
+  IonInput,
+  IonButton
 } from '@ionic/angular/standalone';
 import { Router } from '@angular/router';
+import { AuthService } from '../../core/auth.service';
 
 @Component({
   selector: 'app-sign-up',
@@ -28,18 +34,25 @@ export class SignUpPage {
   email     = '';
   password  = '';
   confirm   = '';
+
   loading   = false;
   error     = '';
+
   showPassword = false;
   showConfirmPassword = false;
 
   public readonly emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  constructor(private router: Router) {}
+  constructor(
+    private auth: AuthService,
+    private router: Router
+  ) {}
 
-  clearError() {
-      this.error = '';
-    }
+  get passwordMismatch(): boolean {
+    const pass = (this.password || '').trim();
+    const conf = (this.confirm || '').trim();
+    return !!pass && !!conf && pass !== conf;
+  }
   
   togglePassword() {
     this.showPassword = !this.showPassword;
@@ -48,24 +61,51 @@ export class SignUpPage {
   toggleConfirmPassword() {
     this.showConfirmPassword = !this.showConfirmPassword;
   }
-  
-  get passwordMismatch(): boolean {
-    return !!this.password && !!this.confirm && this.password !== this.confirm;
+
+  clearError() {
+    this.error = '';
   }
 
   private isBlank(s: string | null | undefined): boolean {
     return !s || !s.trim();
   }
 
-  async submit() {
-    const first = this.firstName.trim();
-    const last  = this.lastName.trim();
-    const mail  = this.email.trim().toLowerCase();
-    const pass  = this.password;
-    const conf  = this.confirm;
+  private humanizeError(e: any): string {
+    const code = e?.code as string | undefined;
 
-    if (this.isBlank(first) || this.isBlank(last) ||
-        this.isBlank(mail)  || this.isBlank(pass) || this.isBlank(conf)) {
+    switch (code) {
+      case 'auth/email-already-in-use':
+        return 'That email is already in use.';
+      case 'auth/invalid-email':
+        return 'Please enter a valid email address.';
+      case 'auth/weak-password':
+        return 'Please use a stronger password.';
+      case 'auth/network-request-failed':
+        return 'Network error. Please check your connection and try again.';
+      default:
+        console.error('Sign-up error:', code, e);
+        return 'Could not create account. Please try again.';
+    }
+  }
+
+  async submit() {
+    if (this.loading) {
+        return;
+    }
+
+    const first = (this.firstName || '').trim();
+    const last  = (this.lastName  || '').trim();
+    const mail  = (this.email     || '').trim().toLowerCase();
+    const pass  = (this.password  || '').trim();
+    const conf  = (this.confirm   || '').trim();
+
+    if (
+      this.isBlank(first) ||
+      this.isBlank(last)  ||
+      this.isBlank(mail)  ||
+      this.isBlank(pass)  ||
+      this.isBlank(conf)
+    ) {
       this.error = 'Please fill out all fields.';
       return;
     }
@@ -89,15 +129,11 @@ export class SignUpPage {
     this.error = '';
 
     try {
-      // Stub for now – later we’ll call AuthService.registerEmail(...)
-      console.log('SIGNUP PAGE STUB:', { first, last, email: mail });
+      await this.auth.registerEmail(mail, pass, first, last);
 
-      await new Promise(resolve => setTimeout(resolve, 400));
-
-      // After "success" go to dashboard (later this will be after real auth)
       await this.router.navigateByUrl('/dashboard', { replaceUrl: true });
-    } catch (e) {
-      this.error = 'Could not create account. Please try again.';
+    } catch (e: any) {
+      this.error = this.humanizeError(e);
     } finally {
       this.loading = false;
     }
