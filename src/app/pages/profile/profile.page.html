@@ -1,0 +1,197 @@
+<app-main-header [title]="'Profile'" [user]="user"></app-main-header>
+
+<ion-content class="home-background">
+  <ion-grid class="profile-grid">
+    <ion-row>
+      <ion-col size-sm="6" offset-sm="3">
+        <h5 class="title">Profile</h5>
+      </ion-col>
+    </ion-row>
+
+    <!-- Profile form (name only; email is read-only) -->
+    <form (ngSubmit)="saveProfile()" #profileForm="ngForm">
+      <ion-row>
+        <ion-col size-sm="6" offset-sm="3">
+          <ion-item class="item-input-wrapper" lines="none">
+            <ion-input
+              label="First name"
+              label-placement="floating"
+              name="firstName"
+              [(ngModel)]="firstName"
+              required
+              minlength="1"
+              maxlength="50">
+            </ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col size-sm="6" offset-sm="3">
+          <ion-item class="item-input-wrapper" lines="none">
+            <ion-input
+              label="Last name"
+              label-placement="floating"
+              name="lastName"
+              [(ngModel)]="lastName"
+              required
+              minlength="1"
+              maxlength="50">
+            </ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col size-sm="6" offset-sm="3">
+          <ion-item class="item-input-wrapper" lines="none">
+            <ion-input
+              label="Email"
+              label-placement="floating"
+              type="email"
+              name="email"
+              [(ngModel)]="email"
+              readonly>
+            </ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col size-sm="6" offset-sm="3">
+          <ion-button
+            type="submit"
+            expand="block"
+            color="primary"
+            [disabled]="loading">
+            {{ loading ? 'Saving…' : 'Save Profile' }}
+          </ion-button>
+        </ion-col>
+      </ion-row>
+    </form>
+
+    <ion-row>
+      <ion-col size-sm="6" offset-sm="3">
+        <hr class="divider full-divider" />
+      </ion-col>
+    </ion-row>
+    
+    <ion-row>
+      <ion-col size-sm="6" offset-sm="3">
+        <h5 class="title">Change Password</h5>
+      </ion-col>
+    </ion-row>
+
+    <form (ngSubmit)="changePassword()" #passwordForm="ngForm">
+      <!-- Current password -->
+      <ion-row>
+        <ion-col size-sm="6" offset-sm="3">
+          <ion-item class="item-input-wrapper" lines="none">
+            <ion-input
+              label="Current password"
+              label-placement="floating"
+              [type]="showCurrentPassword ? 'text' : 'password'"
+              name="currentPassword"
+              [(ngModel)]="currentPassword"
+              required>
+            </ion-input>
+            <i
+              slot="end"
+              class="fa-solid password-icon"
+              [class.fa-eye]="showCurrentPassword"
+              [class.fa-eye-slash]="!showCurrentPassword"
+              (click)="toggleCurrentPassword()"
+              aria-hidden="true">
+            </i>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+
+      <!-- New password -->
+      <ion-row>
+        <ion-col size-sm="6" offset-sm="3">
+          <ion-item class="item-input-wrapper" lines="none">
+            <ion-input
+              label="New password"
+              label-placement="floating"
+              [type]="showNewPassword ? 'text' : 'password'"
+              name="newPassword"
+              [(ngModel)]="newPassword"
+              required>
+            </ion-input>
+            <i
+              slot="end"
+              class="fa-solid password-icon"
+              [class.fa-eye]="showNewPassword"
+              [class.fa-eye-slash]="!showNewPassword"
+              (click)="toggleNewPassword()"
+              aria-hidden="true">
+            </i>
+          </ion-item>
+          @if (newPassword && newPassword.length > 0 && newPassword.length < 8) {
+          <p class="error-message">
+            New password must be at least 8 characters.
+          </p>
+          }
+        </ion-col>
+      </ion-row>
+
+      <!-- Confirm new password -->
+      <ion-row>
+        <ion-col size-sm="6" offset-sm="3">
+          <ion-item class="item-input-wrapper" lines="none">
+            <ion-input
+              label="Confirm new password"
+              label-placement="floating"
+              [type]="showConfirmPassword ? 'text' : 'password'"
+              name="confirmPassword"
+              [(ngModel)]="confirmPassword"
+              required>
+            </ion-input>
+            <i
+              slot="end"
+              class="fa-solid password-icon"
+              [class.fa-eye]="showConfirmPassword"
+              [class.fa-eye-slash]="!showConfirmPassword"
+              (click)="toggleConfirmPassword()"
+              aria-hidden="true">
+            </i>
+          </ion-item>
+          @if (passwordMismatch) {
+          <p class="error-message">
+            New passwords do not match.
+          </p>
+          }
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col size-sm="6" offset-sm="3">
+          <ion-button
+            type="submit"
+            expand="block"
+            color="primary"
+            [disabled]="passwordLoading || passwordMismatch">
+            {{ passwordLoading ? 'Updating…' : 'Change Password' }}
+          </ion-button>
+        </ion-col>
+      </ion-row>
+    </form>
+
+    <!-- Shared error/success messages -->
+    <ion-row>
+      <ion-col size-sm="6" offset-sm="3">
+        @if (error) {
+        <p class="error-message">
+          {{ error }}
+        </p>
+        }
+        @if (success) {
+        <p class="success-message">
+          {{ success }}
+        </p>
+        }
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>

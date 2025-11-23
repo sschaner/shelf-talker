@@ -1,0 +1,31 @@
+ion-toolbar {
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--app-color-dark-gray);
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+.header-title {
+  text-align: center;
+  font-family: var(--ion-font-family-heading);
+  font-size: 18px;
+}
+
+.logout-icon {
+  font-size: 20px;
+  margin-right: 12px;
+  cursor: pointer;
+  color: var(--app-color-dark-red);
+
+  &:active {
+    transform: scale(0.96);
+  }
+}

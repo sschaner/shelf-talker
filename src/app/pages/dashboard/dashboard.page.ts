@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   IonContent,
   IonHeader,
@@ -6,7 +7,11 @@ import {
   IonToolbar,
   IonGrid,
   IonRow,
-  IonCol } from '@ionic/angular/standalone';
+  IonCol
+} from '@ionic/angular/standalone';
+import { AppUser } from 'src/app/models/user.model';
+import { MainHeaderComponent } from 'src/app/shared/main-header/main-header.component';
+import { UserDisplayNamePipe } from 'src/app/shared/user-display-name.pipe';
 
 @Component({
   selector: 'app-dashboard',
@@ -18,15 +23,20 @@ import {
     IonToolbar,
     IonGrid,
     IonRow,
-    IonCol],
+    IonCol,
+    MainHeaderComponent,
+    UserDisplayNamePipe
+  ],
   templateUrl: './dashboard.page.html',
   styleUrls: ['./dashboard.page.scss'],
 })
-export class DashboardPage implements OnInit {
+export class DashboardPage {
+  user: AppUser | null = null;
 
-  constructor() { }
-
-  ngOnInit() {
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router
+  ) {
+    this.user = this.route.snapshot.data['user'] ?? null;
   }
-
 }

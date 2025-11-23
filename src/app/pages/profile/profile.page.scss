@@ -1,0 +1,70 @@
+/* Background matches login/sign-up */
+ion-content.home-background {
+  --background: url('/assets/WineGlassesBeingToasted.png') center center / cover no-repeat !important;
+  --ion-background-color: transparent;
+}
+
+/* Grid wrapper */
+.profile-grid {
+  padding-top: 20px;
+}
+
+/* Section titles */
+.title {
+  text-align: center;
+  font-family: var(--ion-font-family-heading);
+  color: var(--ion-color-primary);
+  margin-bottom: 20px;
+}
+
+/* Card-style wrapper similar to login/sign-up */
+.profile-grid form,
+.profile-grid .password-section {
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 20px;
+  padding: 20px 24px 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+}
+
+/* Input wrapper */
+.item-input-wrapper {
+  margin-bottom: 12px;
+
+  ion-input {
+    --highlight-color-focused: var(--ion-color-primary);
+    --padding-start: 8px;
+  }
+}
+
+/* Password visibility icons */
+.password-icon {
+  font-size: 18px;
+  margin-right: 6px;
+  color: var(--app-color-dark-gray);
+  cursor: pointer;
+
+  &:active {
+    transform: scale(0.92);
+  }
+}
+
+/* Buttons */
+ion-button {
+  margin-top: 10px;
+}
+
+/* Error + success messages */
+.error-message {
+  text-align: center;
+  margin-top: 10px;
+  color: var(--app-color-dark-red);
+  font-weight: 500;
+}
+
+.success-message {
+  text-align: center;
+  margin-top: 10px;
+  color: var(--ion-color-success);
+  font-weight: 500;
+}

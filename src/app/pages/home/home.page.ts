@@ -10,6 +10,7 @@ import {
   IonButton
 } from '@ionic/angular/standalone';
 import { Router, RouterLink } from '@angular/router';
+import { AuthService } from 'src/app/core/auth.service';
 
 @Component({
   selector: 'app-home',
@@ -37,7 +38,10 @@ export class HomePage {
 
   public readonly emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  constructor(private router: Router) {}
+  constructor(
+    private auth: AuthService,
+    private router: Router
+  ) {}
 
   clearError() {
       this.error = '';
@@ -47,7 +51,11 @@ export class HomePage {
     this.showPassword = !this.showPassword;
   }
 
-  onLoginEmail() {
+  async onLoginEmail() {
+    if (this.loading) {
+      return;
+    }
+
     const mail = (this.email || '').trim().toLowerCase();
     const pass = (this.password || '').trim();
 
@@ -64,18 +72,15 @@ export class HomePage {
     this.loading = true;
     this.error = '';
 
-    // Stub for now – just log it.
-    console.log('Login with email/password (stub):', {
-      email: this.email,
-      password: this.password,
-    });
+    try {
+      await this.auth.loginEmail(mail, pass);
 
-    // Simulate quick "done"
-    setTimeout(() => {
+      await this.router.navigateByUrl('/dashboard', { replaceUrl: true });
+    } catch (e: any) {
+      this.error = this.humanizeError(e);
+    } finally {
       this.loading = false;
-      // later: call AuthService.loginEmail(...) and navigate
-      this.router.navigateByUrl('/dashboard', { replaceUrl: true });
-    }, 300);
+    }
   }
 
   onGoogle() {
@@ -100,5 +105,28 @@ export class HomePage {
       this.loading = false;
       // later: this.auth.loginWithMicrosoft() + navigation
     }, 300);
+  }
+
+  /*****************
+  PRIVATE METHODS
+  *****************/
+  private humanizeError(e: any): string {
+    const code = e?.code as string | undefined;
+
+    switch (code) {
+      case 'auth/invalid-credential':
+      case 'auth/wrong-password':
+      case 'auth/user-not-found':
+        return 'Invalid email or password.';
+      case 'auth/too-many-requests':
+        return 'Too many attempts. Please try again later.';
+      case 'auth/invalid-email':
+        return 'Please enter a valid email address.';
+      case 'auth/network-request-failed':
+        return 'Network error. Please check your connection and try again.';
+      default:
+        console.error('Login error:', code, e);
+        return 'Something went wrong. Please try again.';
+    }
   }
 }

@@ -1,0 +1,21 @@
+<ion-header>
+  <ion-toolbar>
+    <img
+      class="avatar"
+      [src]="user?.photoURL || 'assets/default-avatar.png'"
+      alt="Profile"
+      slot="start"
+      (click)="goToProfile()"
+    />
+
+    <ion-title class="header-title">
+      {{ displayTitle }}
+    </ion-title>
+
+    <i
+      class="fa-solid fa-arrow-right-from-bracket logout-icon"
+      slot="end"
+      (click)="logOut()"
+    ></i>
+  </ion-toolbar>
+</ion-header>

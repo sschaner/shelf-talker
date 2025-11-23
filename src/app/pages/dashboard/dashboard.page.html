@@ -1,16 +1,10 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>dashboard</ion-title>
-  </ion-toolbar>
-</ion-header>
+<app-main-header [title]="`Welcome, ${user?.firstName}`" [user]="user"></app-main-header>
 
-<ion-content [fullscreen]="true">
+<ion-content>
   <ion-grid>
     <ion-row>
-      <ion-col size-sm="6" offset-sm="3">
-        <h3 class="app-title">Shelf Talker</h3>
-        <p>Welcome to your dashboard.</p>
-        <p>We'll put real content here later.</p>
+      <ion-col>
+        <h2>Hello, {{ user | userDisplayName }}!</h2>
       </ion-col>
     </ion-row>
   </ion-grid>
