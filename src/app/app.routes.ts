@@ -16,8 +16,18 @@ export const routes: Routes = [
     resolve: { user: currentUserResolver}
   },
   {
-    path: 'profile',
-    loadComponent: () => import('./pages/profile/profile.page').then(m => m.ProfilePage),
+    path: 'profile-view',
+    loadComponent: () => import('./pages/profile-view/profile-view.page').then(m => m.ProfileViewPage),
+    resolve: { user: currentUserResolver },
+  },
+  {
+    path: 'profile-view',
+    loadComponent: () => import('./pages/profile-view/profile-view.page').then(m => m.ProfileViewPage),
+    resolve: { user: currentUserResolver },
+  },
+  {
+    path: 'profile-edit',
+    loadComponent: () => import('./pages/profile-edit/profile-edit.page').then(m => m.ProfileEditPage),
     resolve: { user: currentUserResolver },
   },
   // Wildcard route for a 404 page (Should always be last)

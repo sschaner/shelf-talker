@@ -43,6 +43,6 @@ export class MainHeaderComponent {
   }
 
   goToProfile() {
-    this.router.navigateByUrl('/profile');
+    this.router.navigateByUrl('/profile-view');
   }
 }

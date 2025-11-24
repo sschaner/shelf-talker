@@ -19,7 +19,7 @@ import { AppUser } from 'src/app/models/user.model';
 import { MainHeaderComponent } from 'src/app/shared/main-header/main-header.component';
 
 @Component({
-  selector: 'app-profile',
+  selector: 'app-profile-edit',
   standalone: true,
   imports: [
     IonContent,
@@ -33,10 +33,10 @@ import { MainHeaderComponent } from 'src/app/shared/main-header/main-header.comp
     FormsModule,
     MainHeaderComponent,
   ],
-  templateUrl: './profile.page.html',
-  styleUrls: ['./profile.page.scss'],
+  templateUrl: './profile-edit.page.html',
+  styleUrls: ['./profile-edit.page.scss'],
 })
-export class ProfilePage implements OnInit {
+export class ProfileEditPage implements OnInit {
   user: AppUser | null = null;
 
   // Profile fields
