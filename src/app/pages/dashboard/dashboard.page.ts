@@ -9,8 +9,10 @@ import {
   IonRow,
   IonCol
 } from '@ionic/angular/standalone';
+import { UserService } from 'src/app/core/user.service';
 import { AppUser } from 'src/app/models/user.model';
 import { MainHeaderComponent } from 'src/app/shared/main-header/main-header.component';
+import { AsyncPipe } from '@angular/common';
 import { UserDisplayNamePipe } from 'src/app/shared/user-display-name.pipe';
 
 @Component({
@@ -25,18 +27,16 @@ import { UserDisplayNamePipe } from 'src/app/shared/user-display-name.pipe';
     IonRow,
     IonCol,
     MainHeaderComponent,
-    UserDisplayNamePipe
+    UserDisplayNamePipe,
+    AsyncPipe
   ],
   templateUrl: './dashboard.page.html',
   styleUrls: ['./dashboard.page.scss'],
 })
 export class DashboardPage {
-  user: AppUser | null = null;
+  readonly user$ = this.userService.currentUser$;
 
   constructor(
-    private route: ActivatedRoute,
-    private router: Router
-  ) {
-    this.user = this.route.snapshot.data['user'] ?? null;
-  }
+    private userService: UserService,
+  ) {}
 }

@@ -1,10 +1,15 @@
-<app-main-header [title]="`Welcome, ${user?.firstName}`" [user]="user"></app-main-header>
+<app-main-header 
+  [title]="'Welcome, ' + (user$ | async)?.firstName" 
+  [user]="user$ | async">
+</app-main-header>
 
 <ion-content>
   <ion-grid>
     <ion-row>
       <ion-col>
-        <h2>Hello, {{ user | userDisplayName }}!</h2>
+        @if (user$ | async; as user) {
+          <h2>Hello, {{ user | userDisplayName }}!</h2>
+        }
       </ion-col>
     </ion-row>
   </ion-grid>
