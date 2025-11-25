@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "514318934926",
+    "project_id": "shelf-talker-58776",
+    "storage_bucket": "shelf-talker-58776.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:514318934926:android:ac8f517506c07a2de4badf",
+        "android_client_info": {
+          "package_name": "com.shelftalker.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "514318934926-k38vhck3f39mn9comoab6loe687umbns.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.shelftalker.app",
+            "certificate_hash": "38cacf519afcb7f7fbd83eb7a37d07a95d3aae3b"
+          }
+        },
+        {
+          "client_id": "514318934926-feet1a3uo9ucu7ohcgdd5m2pvuftm97n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJW0BuRnAny07trLbc-XP6Se1rF5Yg8QA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "514318934926-feet1a3uo9ucu7ohcgdd5m2pvuftm97n.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "514318934926-dq3v120c48dgoojhrfvhcacsim7e0i73.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.shelftalker.shelftalker"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

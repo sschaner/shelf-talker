@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "icom.shelftalker.app"
+    namespace "com.shelftalker.app"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "icom.shelftalker.app"
+        applicationId "com.shelftalker.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

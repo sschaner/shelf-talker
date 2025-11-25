@@ -8,7 +8,11 @@ import {
   signOut,
   EmailAuthProvider,
   reauthenticateWithCredential,
-  updatePassword
+  updatePassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithCredential,
+  getAdditionalUserInfo
 } from '@angular/fire/auth';
 import {
   Firestore,
@@ -16,6 +20,8 @@ import {
   setDoc,
   serverTimestamp,
 } from '@angular/fire/firestore';
+import { Capacitor } from '@capacitor/core';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -64,9 +70,43 @@ export class AuthService {
   }
 
   /**
+   * Google Login (Web & Native)
+   */
+  async loginWithGoogle() {
+    let userCredential;
+
+    if (Capacitor.isNativePlatform()) {
+      const result = await FirebaseAuthentication.signInWithGoogle();
+      const credential = GoogleAuthProvider.credential(result.credential?.idToken);
+      userCredential = await signInWithCredential(this.auth, credential);
+    } else {
+      const provider = new GoogleAuthProvider();
+      userCredential = await signInWithPopup(this.auth, provider);
+    }
+
+    const additionalInfo = getAdditionalUserInfo(userCredential);
+    
+    // If this is a new user, create their Firestore document
+    if (additionalInfo?.isNewUser) {
+      const user = userCredential.user;
+      const { firstName, lastName } = this.splitName(user.displayName);
+      await this.createUserDoc(user, { firstName, lastName });
+    }
+
+    return userCredential;
+  }
+
+  /**
    * Sign out the current user.
    */
   async logout() {
+    // Attempt to sign out of Google plugin if on native, 
+    // but don't block standard logout if it fails or isn't needed.
+    try {
+        await FirebaseAuthentication.signOut();
+    } catch (e) {
+        // Ignore error if not signed in with Google
+    }
     await signOut(this.auth);
   }
 
@@ -126,6 +166,17 @@ export class AuthService {
   /*****************
    * PRIVATE METHODS
    *****************/
+
+  /**
+   * Helper to split "First Last" into parts.
+   */
+  private splitName(displayName: string | null): { firstName: string; lastName: string } {
+    if (!displayName) return { firstName: '', lastName: '' };
+    const parts = displayName.trim().split(' ');
+    const firstName = parts[0];
+    const lastName = parts.slice(1).join(' ') || '';
+    return { firstName, lastName };
+  }
 
   /**
    * Create the initial users/{uid} doc in Firestore.

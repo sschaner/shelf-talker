@@ -83,16 +83,18 @@ export class HomePage {
     }
   }
 
-  onGoogle() {
+  async onGoogle() {
     this.loading = true;
     this.error = '';
 
-    console.log('Google sign-in (stub)');
-
-    setTimeout(() => {
+    try {
+      await this.auth.loginWithGoogle();
+      await this.router.navigateByUrl('/dashboard', { replaceUrl: true });
+    } catch (e: any) {
+      this.error = this.humanizeError(e);
+    } finally {
       this.loading = false;
-      // later: this.auth.loginWithGoogle() + navigation
-    }, 300);
+    }
   }
 
   onMicrosoft() {
@@ -124,9 +126,11 @@ export class HomePage {
         return 'Please enter a valid email address.';
       case 'auth/network-request-failed':
         return 'Network error. Please check your connection and try again.';
+      case 'auth/popup-closed-by-user':
+        return 'Sign-in cancelled.';
       default:
         console.error('Login error:', code, e);
-        return 'Something went wrong. Please try again.';
+        return `Error: ${e.message || 'Something went wrong.'}`;
     }
   }
 }

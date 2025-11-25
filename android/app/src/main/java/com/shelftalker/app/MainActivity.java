@@ -1,4 +1,4 @@
-package icom.shelftalker.app;
+package com.shelftalker.app;
 
 import com.getcapacitor.BridgeActivity;
 
