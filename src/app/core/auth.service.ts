@@ -19,6 +19,7 @@ import {
   doc,
   setDoc,
   serverTimestamp,
+  getDoc,
 } from '@angular/fire/firestore';
 import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
@@ -84,11 +85,11 @@ export class AuthService {
       userCredential = await signInWithPopup(this.auth, provider);
     }
 
-    const additionalInfo = getAdditionalUserInfo(userCredential);
-    
-    // If this is a new user, create their Firestore document
-    if (additionalInfo?.isNewUser) {
-      const user = userCredential.user;
+    const user = userCredential.user;
+    const userRef = doc(this.firestore, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
       const { firstName, lastName } = this.splitName(user.displayName);
       await this.createUserDoc(user, { firstName, lastName });
     }
