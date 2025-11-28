@@ -97,16 +97,18 @@ export class HomePage {
     }
   }
 
-  onMicrosoft() {
+  async onMicrosoft() {
     this.loading = true;
     this.error = '';
 
-    console.log('Microsoft sign-in (stub)');
-
-    setTimeout(() => {
+    try {
+      await this.auth.loginWithMicrosoft();
+      await this.router.navigateByUrl('/dashboard', { replaceUrl: true });
+    } catch (e: any) {
+      this.error = this.humanizeError(e);
+    } finally {
       this.loading = false;
-      // later: this.auth.loginWithMicrosoft() + navigation
-    }, 300);
+    }
   }
 
   /*****************
