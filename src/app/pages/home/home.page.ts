@@ -10,7 +10,8 @@ import {
   IonButton
 } from '@ionic/angular/standalone';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from 'src/app/core/auth.service';
+import { AuthService, AccountExistsError } from 'src/app/core/auth.service';
+import { AuthCredential } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-home',
@@ -36,6 +37,11 @@ export class HomePage {
   error = '';
   showPassword = false;
 
+  // Account linking state
+  linkingMode = false;
+  pendingGoogleCredential: AuthCredential | null = null;
+  linkingEmail = '';
+
   public readonly emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   constructor(
@@ -49,6 +55,14 @@ export class HomePage {
 
   togglePassword() {
     this.showPassword = !this.showPassword;
+  }
+
+  cancelLinking() {
+    this.linkingMode = false;
+    this.pendingGoogleCredential = null;
+    this.linkingEmail = '';
+    this.password = '';
+    this.error = '';
   }
 
   async onLoginEmail() {
@@ -83,6 +97,41 @@ export class HomePage {
     }
   }
 
+  async onLinkAccount() {
+    if (this.loading || !this.pendingGoogleCredential) {
+      return;
+    }
+
+    const pass = (this.password || '').trim();
+
+    if (!pass) {
+      this.error = 'Please enter your password.';
+      return;
+    }
+
+    this.loading = true;
+    this.error = '';
+
+    try {
+      await this.auth.linkGoogleToEmailAccount(
+        this.linkingEmail,
+        pass,
+        this.pendingGoogleCredential
+      );
+
+      // Clear linking state
+      this.linkingMode = false;
+      this.pendingGoogleCredential = null;
+      this.linkingEmail = '';
+
+      await this.router.navigateByUrl('/dashboard', { replaceUrl: true });
+    } catch (e: any) {
+      this.error = this.humanizeError(e);
+    } finally {
+      this.loading = false;
+    }
+  }
+
   async onGoogle() {
     this.loading = true;
     this.error = '';
@@ -91,7 +140,15 @@ export class HomePage {
       await this.auth.loginWithGoogle();
       await this.router.navigateByUrl('/dashboard', { replaceUrl: true });
     } catch (e: any) {
-      this.error = this.humanizeError(e);
+      if (e instanceof AccountExistsError) {
+        // Switch to linking mode
+        this.linkingMode = true;
+        this.linkingEmail = e.email;
+        this.pendingGoogleCredential = e.pendingCredential;
+        this.error = '';
+      } else {
+        this.error = this.humanizeError(e);
+      }
     } finally {
       this.loading = false;
     }

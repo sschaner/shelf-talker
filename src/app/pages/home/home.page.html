@@ -7,6 +7,102 @@
     </ion-row>
   </ion-grid>
 
+  <!-- Account Linking Card - shown when Google login finds existing email/password account -->
+  @if (linkingMode) {
+  <div class="login-signup-card login-card">
+    <form #linkForm="ngForm" (ngSubmit)="onLinkAccount()">
+      <ion-grid>
+        <ion-row>
+          <ion-col size-sm="6" offset-sm="3">
+            <h5 class="title">Link Your Account</h5>
+          </ion-col>
+        </ion-row>
+
+        <ion-row>
+          <ion-col size-sm="6" offset-sm="3">
+            <div class="subtitle">CONNECT GOOGLE</div>
+          </ion-col>
+        </ion-row>
+
+        <hr class="divider full-divider" />
+
+        <ion-row>
+          <ion-col size-sm="6" offset-sm="3">
+            <p class="linking-message">
+              An account already exists for <strong>{{ linkingEmail }}</strong>.
+              Enter your password to link your Google account.
+            </p>
+          </ion-col>
+        </ion-row>
+
+        <!-- Password -->
+        <ion-row>
+          <ion-col size-sm="6" offset-sm="3">
+            <ion-item class="item-input-wrapper" lines="none">
+              <ion-input
+                label="Password"
+                label-placement="floating"
+                [type]="showPassword ? 'text' : 'password'"
+                name="linkPassword"
+                [(ngModel)]="password"
+                (ionInput)="clearError()"
+                #linkPasswordModel="ngModel"
+                required>
+              </ion-input>
+              <i
+                slot="end"
+                class="fa-solid password-icon"
+                [class.fa-eye]="showPassword"
+                [class.fa-eye-slash]="!showPassword"
+                (click)="togglePassword()"
+                aria-hidden="true">
+              </i>
+            </ion-item>
+
+            @if (linkPasswordModel.touched && linkPasswordModel.invalid) {
+            <p class="error-message">
+              Please enter your password.
+            </p>
+            }
+          </ion-col>
+        </ion-row>
+
+        <ion-row>
+          <ion-col size-sm="6" offset-sm="3">
+            <ion-button
+              type="submit"
+              expand="block"
+              color="primary"
+              class="submit-button"
+              [disabled]="linkForm.invalid || loading">
+              {{ loading ? 'Please wait…' : 'Link Account' }}
+            </ion-button>
+            
+            @if (error) {
+            <p class="error-message">
+              {{ error }}
+            </p>
+            }
+          </ion-col>
+        </ion-row>
+
+        <ion-row>
+          <ion-col size-sm="6" offset-sm="3">
+            <ion-button
+              type="button"
+              expand="block"
+              fill="outline"
+              color="medium"
+              (click)="cancelLinking()">
+              Cancel
+            </ion-button>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </form>
+  </div>
+  } @else {
+  <!-- Normal Login Card -->
   <div class="login-signup-card login-card">
     <form #f="ngForm" (ngSubmit)="onLoginEmail()">
       <ion-grid>
@@ -156,4 +252,5 @@
       </ion-row>
     </ion-grid>
   </div>
+  }
 </ion-content>

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import {
   Auth,
   User,
+  AuthCredential,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
@@ -12,7 +13,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signInWithCredential,
-  getAdditionalUserInfo
+  linkWithCredential
 } from '@angular/fire/auth';
 import {
   Firestore,
@@ -23,6 +24,22 @@ import {
 } from '@angular/fire/firestore';
 import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
+
+/**
+ * Custom error thrown when Google login finds an existing email/password account.
+ * Contains the email and pending credential needed to link the accounts.
+ */
+export class AccountExistsError extends Error {
+  code = 'auth/account-exists-with-different-credential';
+  
+  constructor(
+    public email: string,
+    public pendingCredential: AuthCredential
+  ) {
+    super('An account already exists with this email. Please enter your password to link your Google account.');
+    this.name = 'AccountExistsError';
+  }
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -72,17 +89,35 @@ export class AuthService {
 
   /**
    * Google Login (Web & Native)
+   * If an email/password account already exists with the same email,
+   * throws AccountExistsError with the pending credential for linking.
    */
   async loginWithGoogle() {
     let userCredential;
+    let googleCredential: AuthCredential | null = null;
 
-    if (Capacitor.isNativePlatform()) {
-      const result = await FirebaseAuthentication.signInWithGoogle();
-      const credential = GoogleAuthProvider.credential(result.credential?.idToken);
-      userCredential = await signInWithCredential(this.auth, credential);
-    } else {
-      const provider = new GoogleAuthProvider();
-      userCredential = await signInWithPopup(this.auth, provider);
+    try {
+      if (Capacitor.isNativePlatform()) {
+        const result = await FirebaseAuthentication.signInWithGoogle();
+        googleCredential = GoogleAuthProvider.credential(result.credential?.idToken);
+        userCredential = await signInWithCredential(this.auth, googleCredential);
+      } else {
+        const provider = new GoogleAuthProvider();
+        userCredential = await signInWithPopup(this.auth, provider);
+        // Extract credential from the popup result for potential linking
+        googleCredential = GoogleAuthProvider.credentialFromResult(userCredential);
+      }
+    } catch (e: any) {
+      // Handle the case where an email/password account already exists
+      if (e?.code === 'auth/account-exists-with-different-credential') {
+        const email = e.customData?.email;
+        const pendingCred = GoogleAuthProvider.credentialFromError(e);
+        
+        if (email && pendingCred) {
+          throw new AccountExistsError(email, pendingCred);
+        }
+      }
+      throw e;
     }
 
     const user = userCredential.user;
@@ -94,6 +129,20 @@ export class AuthService {
       await this.createUserDoc(user, { firstName, lastName });
     }
 
+    return userCredential;
+  }
+
+  /**
+   * Link a Google credential to an existing email/password account.
+   * Used when a user tries to sign in with Google but already has an email/password account.
+   */
+  async linkGoogleToEmailAccount(email: string, password: string, googleCredential: AuthCredential) {
+    // First, sign in with email/password
+    const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
+    
+    // Link the Google credential to this account
+    await linkWithCredential(userCredential.user, googleCredential);
+    
     return userCredential;
   }
 
