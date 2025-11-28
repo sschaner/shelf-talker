@@ -15,6 +15,7 @@ import {
   signInWithCredential,
   getAdditionalUserInfo,
   linkWithCredential,
+  linkWithPopup,
   fetchSignInMethodsForEmail
 } from '@angular/fire/auth';
 import {
@@ -275,11 +276,7 @@ export class AuthService {
       } else {
         const provider = new GoogleAuthProvider();
         provider.setCustomParameters({ login_hint: user.email });
-        const result = await signInWithPopup(this.auth, provider);
-        if (result.user.uid !== user.uid) {
-          // Different user account - cannot link
-          return;
-        }
+        await linkWithPopup(user, provider);
       }
     } catch (e: any) {
       // Silently fail if linking isn't possible
