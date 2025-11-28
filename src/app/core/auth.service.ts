@@ -10,9 +10,12 @@ import {
   reauthenticateWithCredential,
   updatePassword,
   GoogleAuthProvider,
+  OAuthProvider,
   signInWithPopup,
   signInWithCredential,
-  getAdditionalUserInfo
+  getAdditionalUserInfo,
+  linkWithCredential,
+  fetchSignInMethodsForEmail
 } from '@angular/fire/auth';
 import {
   Firestore,
@@ -93,6 +96,41 @@ export class AuthService {
       const { firstName, lastName } = this.splitName(user.displayName);
       await this.createUserDoc(user, { firstName, lastName });
     }
+
+    return userCredential;
+  }
+
+  /**
+   * Microsoft Login (Web & Native)
+   * If the Microsoft account email is also a Google account, link them.
+   */
+  async loginWithMicrosoft() {
+    let userCredential;
+
+    if (Capacitor.isNativePlatform()) {
+      const result = await FirebaseAuthentication.signInWithMicrosoft();
+      const provider = new OAuthProvider('microsoft.com');
+      const credential = provider.credential({
+        idToken: result.credential?.idToken,
+        accessToken: result.credential?.accessToken
+      });
+      userCredential = await signInWithCredential(this.auth, credential);
+    } else {
+      const provider = new OAuthProvider('microsoft.com');
+      userCredential = await signInWithPopup(this.auth, provider);
+    }
+
+    const user = userCredential.user;
+    const userRef = doc(this.firestore, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      const { firstName, lastName } = this.splitName(user.displayName);
+      await this.createUserDoc(user, { firstName, lastName });
+    }
+
+    // Attempt to link Google account if the email is a Google account
+    await this.linkGoogleAccountIfAvailable(user);
 
     return userCredential;
   }
@@ -203,5 +241,50 @@ export class AuthService {
       },
       { merge: true }
     );
+  }
+
+  /**
+   * Attempt to link a Google account if the user's email has an existing Google sign-in method.
+   * This is used when a Microsoft account email is also a Google account.
+   */
+  private async linkGoogleAccountIfAvailable(user: User): Promise<void> {
+    if (!user.email) {
+      return;
+    }
+
+    // Check if user already has Google provider linked
+    const hasGoogleLinked = user.providerData.some(
+      (provider) => provider.providerId === 'google.com'
+    );
+    if (hasGoogleLinked) {
+      return;
+    }
+
+    try {
+      // Check if this email has a Google sign-in method available
+      const signInMethods = await fetchSignInMethodsForEmail(this.auth, user.email);
+      if (!signInMethods.includes('google.com')) {
+        return;
+      }
+
+      // Prompt the user to link their Google account
+      if (Capacitor.isNativePlatform()) {
+        const result = await FirebaseAuthentication.signInWithGoogle();
+        const credential = GoogleAuthProvider.credential(result.credential?.idToken);
+        await linkWithCredential(user, credential);
+      } else {
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ login_hint: user.email });
+        const result = await signInWithPopup(this.auth, provider);
+        if (result.user.uid !== user.uid) {
+          // Different user account - cannot link
+          return;
+        }
+      }
+    } catch (e: any) {
+      // Silently fail if linking isn't possible
+      // Common reasons: account already linked, user cancelled popup
+      console.warn('Could not link Google account:', e?.code || e?.message);
+    }
   }
 }
