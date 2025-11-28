@@ -27,14 +27,15 @@ import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 
 /**
  * Custom error thrown when Google login finds an existing email/password account.
- * Contains the email and pending credential needed to link the accounts.
+ * Contains the email, pending credential, and optional Google photo URL needed to link the accounts.
  */
 export class AccountExistsError extends Error {
   code = 'auth/account-exists-with-different-credential';
   
   constructor(
     public email: string,
-    public pendingCredential: AuthCredential
+    public pendingCredential: AuthCredential,
+    public googlePhotoURL: string | null = null
   ) {
     super('An account already exists with this email. Please enter your password to link your Google account.');
     this.name = 'AccountExistsError';
@@ -112,9 +113,10 @@ export class AuthService {
       if (e?.code === 'auth/account-exists-with-different-credential') {
         const email = e.customData?.email;
         const pendingCred = GoogleAuthProvider.credentialFromError(e);
+        const googlePhotoURL = e.customData?.photoURL || null;
         
         if (email && pendingCred) {
-          throw new AccountExistsError(email, pendingCred);
+          throw new AccountExistsError(email, pendingCred, googlePhotoURL);
         }
       }
       throw e;
@@ -135,13 +137,39 @@ export class AuthService {
   /**
    * Link a Google credential to an existing email/password account.
    * Used when a user tries to sign in with Google but already has an email/password account.
+   * Optionally updates the user's photo URL with their Google photo.
    */
-  async linkGoogleToEmailAccount(email: string, password: string, googleCredential: AuthCredential) {
+  async linkGoogleToEmailAccount(
+    email: string,
+    password: string,
+    googleCredential: AuthCredential,
+    updatePhotoURL?: string | null
+  ) {
     // First, sign in with email/password
     const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
     
     // Link the Google credential to this account
     await linkWithCredential(userCredential.user, googleCredential);
+    
+    // Optionally update the photo URL
+    if (updatePhotoURL) {
+      await updateProfile(userCredential.user, { photoURL: updatePhotoURL });
+      
+      // Also update Firestore - errors here are logged but don't fail the operation
+      try {
+        const userRef = doc(this.firestore, 'users', userCredential.user.uid);
+        await setDoc(
+          userRef,
+          {
+            photoURL: updatePhotoURL,
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+      } catch (firestoreError) {
+        console.error('Failed to update Firestore photo URL:', firestoreError);
+      }
+    }
     
     return userCredential;
   }

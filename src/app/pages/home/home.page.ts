@@ -7,7 +7,8 @@ import {
   IonCol,
   IonItem,
   IonInput,
-  IonButton
+  IonButton,
+  IonCheckbox
 } from '@ionic/angular/standalone';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService, AccountExistsError } from 'src/app/core/auth.service';
@@ -24,6 +25,7 @@ import { AuthCredential } from '@angular/fire/auth';
     IonItem,
     IonInput,
     IonButton,
+    IonCheckbox,
     FormsModule,
     RouterLink
   ],
@@ -41,6 +43,8 @@ export class HomePage {
   linkingMode = false;
   pendingGoogleCredential: AuthCredential | null = null;
   linkingEmail = '';
+  googlePhotoURL: string | null = null;
+  useGooglePhoto = false;
 
   public readonly emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -61,6 +65,8 @@ export class HomePage {
     this.linkingMode = false;
     this.pendingGoogleCredential = null;
     this.linkingEmail = '';
+    this.googlePhotoURL = null;
+    this.useGooglePhoto = false;
     this.password = '';
     this.error = '';
   }
@@ -116,13 +122,16 @@ export class HomePage {
       await this.auth.linkGoogleToEmailAccount(
         this.linkingEmail,
         pass,
-        this.pendingGoogleCredential
+        this.pendingGoogleCredential,
+        this.useGooglePhoto ? this.googlePhotoURL : null
       );
 
       // Clear linking state
       this.linkingMode = false;
       this.pendingGoogleCredential = null;
       this.linkingEmail = '';
+      this.googlePhotoURL = null;
+      this.useGooglePhoto = false;
       this.password = '';
 
       await this.router.navigateByUrl('/dashboard', { replaceUrl: true });
@@ -146,6 +155,8 @@ export class HomePage {
         this.linkingMode = true;
         this.linkingEmail = e.email;
         this.pendingGoogleCredential = e.pendingCredential;
+        this.googlePhotoURL = e.googlePhotoURL;
+        this.useGooglePhoto = false;
         this.password = '';
         this.error = '';
       } else {
