@@ -123,6 +123,7 @@ export class HomePage {
       this.linkingMode = false;
       this.pendingGoogleCredential = null;
       this.linkingEmail = '';
+      this.password = '';
 
       await this.router.navigateByUrl('/dashboard', { replaceUrl: true });
     } catch (e: any) {
@@ -145,6 +146,7 @@ export class HomePage {
         this.linkingMode = true;
         this.linkingEmail = e.email;
         this.pendingGoogleCredential = e.pendingCredential;
+        this.password = '';
         this.error = '';
       } else {
         this.error = this.humanizeError(e);
