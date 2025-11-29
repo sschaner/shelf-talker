@@ -4,4 +4,5 @@
     <string name="title_activity_main">Shelf Talker</string>
     <string name="package_name">com.shelftalker.app</string>
     <string name="custom_url_scheme">com.shelftalker.app</string>
+    <string name="server_client_id">514318934926-feet1a3uo9ucu7ohcgdd5m2pvuftm97n.apps.googleusercontent.com</string>
 </resources>

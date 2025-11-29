@@ -13,7 +13,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signInWithCredential,
-  linkWithCredential
+  linkWithCredential,
+  sendEmailVerification
 } from '@angular/fire/auth';
 import {
   Firestore,
@@ -24,23 +25,6 @@ import {
 } from '@angular/fire/firestore';
 import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
-
-/**
- * Custom error thrown when Google login finds an existing email/password account.
- * Contains the email, pending credential, and optional Google photo URL needed to link the accounts.
- */
-export class AccountExistsError extends Error {
-  code = 'auth/account-exists-with-different-credential';
-  
-  constructor(
-    public email: string,
-    public pendingCredential: AuthCredential,
-    public googlePhotoURL: string | null = null
-  ) {
-    super('An account already exists with this email. Please enter your password to link your Google account.');
-    this.name = 'AccountExistsError';
-  }
-}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -76,16 +60,37 @@ export class AuthService {
     await updateProfile(user, { displayName });
 
     // Create user document in Firestore
-    await this.createUserDoc(user, { firstName, lastName });
+    try {
+      await this.createUserDoc(user, { firstName, lastName });
+    } catch (e) {
+      console.error('Error creating user document:', e);
+    }
+
+    // Send verification email
+    try {
+      await sendEmailVerification(user);
+    } catch (e) {
+      console.error('Error sending verification email:', e);
+    }
 
     return cred;
   }
 
   /**
    * Email/password login.
+   * Enforces email verification.
    */
   async loginEmail(email: string, password: string) {
-    return signInWithEmailAndPassword(this.auth, email, password);
+    const credential = await signInWithEmailAndPassword(this.auth, email, password);
+    
+    if (!credential.user.emailVerified) {
+      await signOut(this.auth);
+      const error: any = new Error('Email not verified');
+      error.code = 'auth/email-not-verified';
+      throw error;
+    }
+
+    return credential;
   }
 
   /**
@@ -105,20 +110,9 @@ export class AuthService {
       } else {
         const provider = new GoogleAuthProvider();
         userCredential = await signInWithPopup(this.auth, provider);
-        // Extract credential from the popup result for potential linking
         googleCredential = GoogleAuthProvider.credentialFromResult(userCredential);
       }
     } catch (e: any) {
-      // Handle the case where an email/password account already exists
-      if (e?.code === 'auth/account-exists-with-different-credential') {
-        const email = e.customData?.email;
-        const pendingCred = GoogleAuthProvider.credentialFromError(e);
-        const googlePhotoURL = e.customData?.photoURL || null;
-        
-        if (email && pendingCred) {
-          throw new AccountExistsError(email, pendingCred, googlePhotoURL);
-        }
-      }
       throw e;
     }
 
@@ -184,6 +178,7 @@ export class AuthService {
         await FirebaseAuthentication.signOut();
     } catch (e) {
         // Ignore error if not signed in with Google
+        console.warn('Google logout error:', e);
     }
     await signOut(this.auth);
   }
@@ -238,6 +233,24 @@ export class AuthService {
     await reauthenticateWithCredential(user, credential);
     
     await updatePassword(user, newPassword);
+  }
+
+  /**
+   * Update the user's profile photo URL in Firestore
+   */
+  async updateProfilePhoto(photoURL: string): Promise<void> {
+    const user = this.auth.currentUser;
+    if (!user) return;
+
+    const userRef = doc(this.firestore, 'users', user.uid);
+    await setDoc(
+      userRef,
+      {
+        photoURL,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
   }
 
 
