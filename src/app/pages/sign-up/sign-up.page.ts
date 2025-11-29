@@ -12,6 +12,7 @@ import {
 } from '@ionic/angular/standalone';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { VALIDATION } from '../../core/constants';
 
 @Component({
   selector: 'app-sign-up',
@@ -42,7 +43,8 @@ export class SignUpPage {
   showPassword = false;
   showConfirmPassword = false;
 
-  public readonly emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  public readonly emailPattern = VALIDATION.EMAIL;
+  public readonly minPasswordLength = VALIDATION.PASSWORD_MIN_LENGTH;
 
   constructor(
     private auth: AuthService,
@@ -117,8 +119,8 @@ export class SignUpPage {
       return;
     }
 
-    if (pass.length < 8) {
-      this.error = 'Password must be at least 8 characters.';
+    if (pass.length < this.minPasswordLength) {
+      this.error = `Password must be at least ${this.minPasswordLength} characters.`;
       return;
     }
 
