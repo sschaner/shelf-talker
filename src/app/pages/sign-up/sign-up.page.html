@@ -111,7 +111,7 @@
                 (ionInput)="clearError()"
                 #passwordModel="ngModel"
                 required
-                minlength="8">
+                [minlength]="minPasswordLength">
               </ion-input>
               <i
                 slot="end"
@@ -125,7 +125,7 @@
 
             @if (passwordModel.touched && passwordModel.invalid) {
             <p class="error-message">
-              Password is required and must be at least 8 characters.
+              Password is required and must be at least {{ minPasswordLength }} characters.
             </p>
             }
           </ion-col>

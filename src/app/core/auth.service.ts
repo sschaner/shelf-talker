@@ -13,7 +13,6 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signInWithCredential,
-  linkWithCredential,
   sendEmailVerification
 } from '@angular/fire/auth';
 import {
@@ -65,8 +64,7 @@ export class AuthService {
     } catch (e) {
       console.error('Error creating user document:', e);
     }
-
-    // Send verification email
+    
     try {
       await sendEmailVerification(user);
     } catch (e) {
@@ -125,46 +123,6 @@ export class AuthService {
       await this.createUserDoc(user, { firstName, lastName });
     }
 
-    return userCredential;
-  }
-
-  /**
-   * Link a Google credential to an existing email/password account.
-   * Used when a user tries to sign in with Google but already has an email/password account.
-   * Optionally updates the user's photo URL with their Google photo.
-   */
-  async linkGoogleToEmailAccount(
-    email: string,
-    password: string,
-    googleCredential: AuthCredential,
-    updatePhotoURL?: string | null
-  ) {
-    // First, sign in with email/password
-    const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
-    
-    // Link the Google credential to this account
-    await linkWithCredential(userCredential.user, googleCredential);
-    
-    // Optionally update the photo URL
-    if (updatePhotoURL) {
-      await updateProfile(userCredential.user, { photoURL: updatePhotoURL });
-      
-      // Also update Firestore - errors here are logged but don't fail the operation
-      try {
-        const userRef = doc(this.firestore, 'users', userCredential.user.uid);
-        await setDoc(
-          userRef,
-          {
-            photoURL: updatePhotoURL,
-            updatedAt: serverTimestamp(),
-          },
-          { merge: true }
-        );
-      } catch (firestoreError) {
-        console.error('Failed to update Firestore photo URL:', firestoreError);
-      }
-    }
-    
     return userCredential;
   }
 

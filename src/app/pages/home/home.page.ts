@@ -14,8 +14,8 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from 'src/app/core/auth.service';
 import { UserService } from 'src/app/core/user.service';
-import { AuthCredential } from '@angular/fire/auth';
 import { firstValueFrom } from 'rxjs';
+import { VALIDATION } from 'src/app/core/constants';
 
 @Component({
   selector: 'app-home',
@@ -42,14 +42,7 @@ export class HomePage {
   error = '';
   showPassword = false;
 
-  // Account linking state
-  linkingMode = false;
-  pendingGoogleCredential: AuthCredential | null = null;
-  linkingEmail = '';
-  googlePhotoURL: string | null = null;
-  useGooglePhoto = false;
-
-  public readonly emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  public readonly emailPattern = VALIDATION.EMAIL;
 
   constructor(
     private auth: AuthService,
@@ -64,16 +57,6 @@ export class HomePage {
 
   togglePassword() {
     this.showPassword = !this.showPassword;
-  }
-
-  cancelLinking() {
-    this.linkingMode = false;
-    this.pendingGoogleCredential = null;
-    this.linkingEmail = '';
-    this.googlePhotoURL = null;
-    this.useGooglePhoto = false;
-    this.password = '';
-    this.error = '';
   }
 
   async onLoginEmail() {
@@ -108,45 +91,6 @@ export class HomePage {
     }
   }
 
-  async onLinkAccount() {
-    if (this.loading || !this.pendingGoogleCredential) {
-      return;
-    }
-
-    const pass = (this.password || '').trim();
-
-    if (!pass) {
-      this.error = 'Please enter your password.';
-      return;
-    }
-
-    this.loading = true;
-    this.error = '';
-
-    try {
-      await this.auth.linkGoogleToEmailAccount(
-        this.linkingEmail,
-        pass,
-        this.pendingGoogleCredential,
-        this.useGooglePhoto ? this.googlePhotoURL : null
-      );
-
-      // Clear linking state
-      this.linkingMode = false;
-      this.pendingGoogleCredential = null;
-      this.linkingEmail = '';
-      this.googlePhotoURL = null;
-      this.useGooglePhoto = false;
-      this.password = '';
-
-      await this.router.navigateByUrl('/dashboard', { replaceUrl: true });
-    } catch (e: any) {
-      this.error = this.humanizeError(e);
-    } finally {
-      this.loading = false;
-    }
-  }
-
   async onGoogle() {
     this.loading = true;
     this.error = '';
@@ -154,7 +98,6 @@ export class HomePage {
     try {
       const credential = await this.auth.loginWithGoogle();
       const user = credential.user;
-      console.log('User Provider Data:', user.providerData);
 
       // Check if we should prompt for photo update
       if (user.photoURL) {
@@ -176,6 +119,21 @@ export class HomePage {
     }
   }
 
+  onMicrosoft() {
+    this.loading = true;
+    this.error = '';
+
+    console.log('Microsoft sign-in (stub)');
+
+    setTimeout(() => {
+      this.loading = false;
+      // later: this.auth.loginWithMicrosoft() + navigation
+    }, 300);
+  }
+
+  /*****************
+  PRIVATE METHODS
+  *****************/
   private async askToUseGooglePhoto(): Promise<boolean> {
     return new Promise(async (resolve) => {
       const alert = await this.alertController.create({
@@ -198,21 +156,6 @@ export class HomePage {
     });
   }
 
-  onMicrosoft() {
-    this.loading = true;
-    this.error = '';
-
-    console.log('Microsoft sign-in (stub)');
-
-    setTimeout(() => {
-      this.loading = false;
-      // later: this.auth.loginWithMicrosoft() + navigation
-    }, 300);
-  }
-
-  /*****************
-  PRIVATE METHODS
-  *****************/
   private humanizeError(e: any): string {
     const code = e?.code as string | undefined;
 
@@ -232,7 +175,6 @@ export class HomePage {
       case 'auth/email-not-verified':
         return 'Please verify your email address before logging in.';
       default:
-        console.error('Login error:', code, e);
         return `Error: ${e.message || 'Something went wrong.'}`;
     }
   }
