@@ -7,10 +7,12 @@ import {
   IonCol,
   IonItem,
   IonInput,
-  IonButton
+  IonButton,
+  AlertController
 } from '@ionic/angular/standalone';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { VALIDATION } from '../../core/constants';
 
 @Component({
   selector: 'app-sign-up',
@@ -41,11 +43,13 @@ export class SignUpPage {
   showPassword = false;
   showConfirmPassword = false;
 
-  public readonly emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  public readonly emailPattern = VALIDATION.EMAIL;
+  public readonly minPasswordLength = VALIDATION.PASSWORD_MIN_LENGTH;
 
   constructor(
     private auth: AuthService,
-    private router: Router
+    private router: Router,
+    private alertController: AlertController
   ) {}
 
   get passwordMismatch(): boolean {
@@ -115,8 +119,8 @@ export class SignUpPage {
       return;
     }
 
-    if (pass.length < 8) {
-      this.error = 'Password must be at least 8 characters.';
+    if (pass.length < this.minPasswordLength) {
+      this.error = `Password must be at least ${this.minPasswordLength} characters.`;
       return;
     }
 
@@ -131,7 +135,17 @@ export class SignUpPage {
     try {
       await this.auth.registerEmail(mail, pass, first, last);
 
-      await this.router.navigateByUrl('/dashboard', { replaceUrl: true });
+      const alert = await this.alertController.create({
+        header: 'Account Created',
+        message: 'We have sent a verification email to your inbox. Please verify your email to secure your account.',
+        buttons: ['OK']
+      });
+      await alert.present();
+      await alert.onDidDismiss();
+
+      // Sign out and redirect to login
+      await this.auth.logout();
+      await this.router.navigateByUrl('/home', { replaceUrl: true });
     } catch (e: any) {
       this.error = this.humanizeError(e);
     } finally {

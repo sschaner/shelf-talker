@@ -17,6 +17,7 @@ import { UserService } from 'src/app/core/user.service';
 import { AuthService } from 'src/app/core/auth.service';
 import { AppUser } from 'src/app/models/user.model';
 import { MainHeaderComponent } from 'src/app/shared/main-header/main-header.component';
+import { VALIDATION } from 'src/app/core/constants';
 
 @Component({
   selector: 'app-profile-edit',
@@ -61,6 +62,8 @@ export class ProfileEditPage implements OnInit {
 
   // Password update state
   passwordLoading = false;
+
+  public readonly minPasswordLength = VALIDATION.PASSWORD_MIN_LENGTH;
 
   constructor(
     private userService: UserService,
@@ -142,8 +145,7 @@ export class ProfileEditPage implements OnInit {
       this.loading = false;
     }
   }
-
-  // --- Change password ---
+  
   async changePassword(): Promise<void> {
     if (!this.user || this.passwordLoading) {
       return;
@@ -160,8 +162,8 @@ export class ProfileEditPage implements OnInit {
       return;
     }
 
-    if (next.length < 8) {
-      this.error = 'New password must be at least 8 characters.';
+    if (next.length < this.minPasswordLength) {
+      this.error = `New password must be at least ${this.minPasswordLength} characters.`;
       return;
     }
 
@@ -194,7 +196,7 @@ export class ProfileEditPage implements OnInit {
 
     switch (code) {
       case 'auth/weak-password':
-        return 'Please use a stronger password (at least 8 characters).';
+        return `Please use a stronger password (at least ${this.minPasswordLength} characters).`;
       case 'auth/wrong-password':
       case 'auth/invalid-credential':
         return 'Your current password is incorrect.';

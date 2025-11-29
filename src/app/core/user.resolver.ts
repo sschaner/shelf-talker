@@ -2,7 +2,7 @@ import { inject } from '@angular/core';
 import { ResolveFn, Router } from '@angular/router';
 import { UserService } from './user.service';
 import { AppUser } from '../models/user.model';
-import { Observable, of } from 'rxjs';
+import { of } from 'rxjs';
 import { switchMap, take } from 'rxjs/operators';
 
 /**
@@ -17,10 +17,15 @@ export const currentUserResolver: ResolveFn<AppUser | null> = () => {
   return userService.currentUser$.pipe(
     take(1),
     switchMap(user => {
-      if (user) return of(user);
+      if (user) {
 
-      // Not logged in → send to login page
+        // Observable that emits the current user
+        return of(user);
+      }
+
+      // Not logged in --> send to login page
       router.navigateByUrl('/', { replaceUrl: true });
+
       return of(null);
     })
   );

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import {
   Auth,
   User,
+  AuthCredential,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
@@ -13,10 +14,7 @@ import {
   OAuthProvider,
   signInWithPopup,
   signInWithCredential,
-  getAdditionalUserInfo,
-  linkWithCredential,
-  linkWithPopup,
-  fetchSignInMethodsForEmail
+  sendEmailVerification
 } from '@angular/fire/auth';
 import {
   Firestore,
@@ -62,31 +60,59 @@ export class AuthService {
     await updateProfile(user, { displayName });
 
     // Create user document in Firestore
-    await this.createUserDoc(user, { firstName, lastName });
+    try {
+      await this.createUserDoc(user, { firstName, lastName });
+    } catch (e) {
+      console.error('Error creating user document:', e);
+    }
+    
+    try {
+      await sendEmailVerification(user);
+    } catch (e) {
+      console.error('Error sending verification email:', e);
+    }
 
     return cred;
   }
 
   /**
    * Email/password login.
+   * Enforces email verification.
    */
   async loginEmail(email: string, password: string) {
-    return signInWithEmailAndPassword(this.auth, email, password);
+    const credential = await signInWithEmailAndPassword(this.auth, email, password);
+    
+    if (!credential.user.emailVerified) {
+      await signOut(this.auth);
+      const error: any = new Error('Email not verified');
+      error.code = 'auth/email-not-verified';
+      throw error;
+    }
+
+    return credential;
   }
 
   /**
    * Google Login (Web & Native)
+   * If an email/password account already exists with the same email,
+   * throws AccountExistsError with the pending credential for linking.
    */
   async loginWithGoogle() {
     let userCredential;
+    let googleCredential: AuthCredential | null = null;
 
-    if (Capacitor.isNativePlatform()) {
-      const result = await FirebaseAuthentication.signInWithGoogle();
-      const credential = GoogleAuthProvider.credential(result.credential?.idToken);
-      userCredential = await signInWithCredential(this.auth, credential);
-    } else {
-      const provider = new GoogleAuthProvider();
-      userCredential = await signInWithPopup(this.auth, provider);
+    try {
+      if (Capacitor.isNativePlatform()) {
+        const result = await FirebaseAuthentication.signInWithGoogle();
+        googleCredential = GoogleAuthProvider.credential(result.credential?.idToken);
+        userCredential = await signInWithCredential(this.auth, googleCredential);
+      } else {
+        const provider = new GoogleAuthProvider();
+        userCredential = await signInWithPopup(this.auth, provider);
+        googleCredential = GoogleAuthProvider.credentialFromResult(userCredential);
+      }
+    } catch (e: any) {
+      throw e;
     }
 
     const user = userCredential.user;
@@ -146,6 +172,7 @@ export class AuthService {
         await FirebaseAuthentication.signOut();
     } catch (e) {
         // Ignore error if not signed in with Google
+        console.warn('Google logout error:', e);
     }
     await signOut(this.auth);
   }
@@ -200,6 +227,24 @@ export class AuthService {
     await reauthenticateWithCredential(user, credential);
     
     await updatePassword(user, newPassword);
+  }
+
+  /**
+   * Update the user's profile photo URL in Firestore
+   */
+  async updateProfilePhoto(photoURL: string): Promise<void> {
+    const user = this.auth.currentUser;
+    if (!user) return;
+
+    const userRef = doc(this.firestore, 'users', user.uid);
+    await setDoc(
+      userRef,
+      {
+        photoURL,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
   }
 
 

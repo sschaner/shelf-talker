@@ -7,10 +7,15 @@ import {
   IonCol,
   IonItem,
   IonInput,
-  IonButton
+  IonButton,
+  IonCheckbox,
+  AlertController
 } from '@ionic/angular/standalone';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from 'src/app/core/auth.service';
+import { UserService } from 'src/app/core/user.service';
+import { firstValueFrom } from 'rxjs';
+import { VALIDATION } from 'src/app/core/constants';
 
 @Component({
   selector: 'app-home',
@@ -23,6 +28,7 @@ import { AuthService } from 'src/app/core/auth.service';
     IonItem,
     IonInput,
     IonButton,
+    IonCheckbox,
     FormsModule,
     RouterLink
   ],
@@ -36,11 +42,13 @@ export class HomePage {
   error = '';
   showPassword = false;
 
-  public readonly emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  public readonly emailPattern = VALIDATION.EMAIL;
 
   constructor(
     private auth: AuthService,
-    private router: Router
+    private userService: UserService,
+    private router: Router,
+    private alertController: AlertController
   ) {}
 
   clearError() {
@@ -88,7 +96,21 @@ export class HomePage {
     this.error = '';
 
     try {
-      await this.auth.loginWithGoogle();
+      const credential = await this.auth.loginWithGoogle();
+      const user = credential.user;
+
+      // Check if we should prompt for photo update
+      if (user.photoURL) {
+        const appUser = await firstValueFrom(this.userService.getUser(user.uid));
+        
+        if (appUser && !appUser.photoURL) {
+          const confirm = await this.askToUseGooglePhoto();
+          if (confirm) {
+            await this.auth.updateProfilePhoto(user.photoURL);
+          }
+        }
+      }
+
       await this.router.navigateByUrl('/dashboard', { replaceUrl: true });
     } catch (e: any) {
       this.error = this.humanizeError(e);
@@ -114,6 +136,28 @@ export class HomePage {
   /*****************
   PRIVATE METHODS
   *****************/
+  private async askToUseGooglePhoto(): Promise<boolean> {
+    return new Promise(async (resolve) => {
+      const alert = await this.alertController.create({
+        header: 'Update Profile Photo?',
+        message: 'Would you like to use your Google profile photo?',
+        buttons: [
+          {
+            text: 'No',
+            role: 'cancel',
+            handler: () => resolve(false)
+          },
+          {
+            text: 'Yes',
+            handler: () => resolve(true)
+          }
+        ]
+      });
+
+      await alert.present();
+    });
+  }
+
   private humanizeError(e: any): string {
     const code = e?.code as string | undefined;
 
@@ -130,8 +174,9 @@ export class HomePage {
         return 'Network error. Please check your connection and try again.';
       case 'auth/popup-closed-by-user':
         return 'Sign-in cancelled.';
+      case 'auth/email-not-verified':
+        return 'Please verify your email address before logging in.';
       default:
-        console.error('Login error:', code, e);
         return `Error: ${e.message || 'Something went wrong.'}`;
     }
   }

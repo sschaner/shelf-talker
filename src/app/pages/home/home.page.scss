@@ -9,3 +9,32 @@
   font-size: 1.2em;
   margin-right: 8px;
 }
+
+.linking-message {
+  color: var(--ion-color-medium);
+  font-size: 0.95em;
+  line-height: 1.4;
+  margin: 8px 0 16px;
+  text-align: center;
+}
+
+.google-photo-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.google-photo-preview {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--ion-color-light);
+}
+
+.photo-checkbox-item {
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  --background: transparent;
+}
